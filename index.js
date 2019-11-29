@@ -1,24 +1,14 @@
-function logDelta(message, start) {
-    console.log(message + ' with start ' + start + ' ' + (performance.now() - start));
+function logMethodExecutionTime(method, start) {
+    console.log(method + ' took ' + (performance.now() - start));
 }
 
-function runExperiment(numOfAudio, numOfVideo, times, pc1, start) {
+function runExperiment(numOfAudio, numOfVideo, times, pc1) {
     if (times <= 0) {
         return;
     }
 
 if (!pc1) {
     pc1 = new RTCPeerConnection( {sdpSemantics: 'plan-b'});
-
-    let addedTracks = 0;
-    pc1.addEventListener('track', track => {
-        addedTracks++;
-        if (addedTracks == 1) {
-            logDelta('First track: ', start);
-        } else if (addedTracks >= numOfAudio + numOfVideo) {
-            logDelta('Last track: ', start);
-        }
-    });
 }
 
 let audioLine = ''
@@ -128,18 +118,17 @@ a=x-google-flag:conference
 const offer = new RTCSessionDescription();
 offer.type = 'offer';
 offer.sdp = offerSdp;
-if (!start)
-{
- start = performance.now();
-}
-logDelta('starting: ', start);
+
+var start = performance.now();
 pc1.setRemoteDescription(offer).then(_ => {
-    logDelta('SRD: ', start);
+    logMethodExecutionTime('setRemoteDescription', start);
+    start = performance.now();
     pc1.createAnswer().then(answer => {
-        logDelta('createAnswer: ', start);
+        logMethodExecutionTime('createAnswer', start);
+        start = performance.now();
         pc1.setLocalDescription(answer).then(_ => {
-            logDelta('SLD: ', start);
-            runExperiment(numOfAudio + 1, numOfVideo + 1, --times, pc1, performance.now())
+            logMethodExecutionTime('setLocalDescription', start);
+            runExperiment(numOfAudio + 1, numOfVideo + 1, --times, pc1)
         }).catch(err => {
             console.log(err)
         });
