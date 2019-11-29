@@ -2,6 +2,7 @@ function logMethodExecutionTime(method, start) {
     console.log(method + ' took ' + (performance.now() - start));
 }
 
+window.peerConnections = []
 function runExperiment(numOfAudio, numOfVideo, times, pc1) {
     if (times <= 0) {
         return;
@@ -9,6 +10,7 @@ function runExperiment(numOfAudio, numOfVideo, times, pc1) {
 
 if (!pc1) {
     pc1 = new RTCPeerConnection( {sdpSemantics: 'plan-b'});
+    window.peerConnections.push(pc1);
 }
 
 let audioLine = ''
@@ -115,9 +117,7 @@ a=rtcp-mux${videoLine}
 a=x-google-flag:conference
 `;
 
-const offer = new RTCSessionDescription();
-offer.type = 'offer';
-offer.sdp = offerSdp;
+const offer = new RTCSessionDescription({type: 'offer', sdp: offerSdp});
 
 var start = performance.now();
 pc1.setRemoteDescription(offer).then(_ => {
