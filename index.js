@@ -9,33 +9,16 @@ function runExperiment(numOfAudio, numOfVideo, times, pc1) {
     }
 
 if (!pc1) {
-    pc1 = new RTCPeerConnection( {sdpSemantics: 'plan-b'});
+    pc1 = new RTCPeerConnection({
+        sdpSemantics: 'unified-plan',
+        bundlePolicy: 'max-bundle',
+    });
     window.peerConnections.push(pc1);
 }
 
 let audioLine = ''
 for (let ssrc = 1; ssrc <= numOfAudio; ssrc++) {
     audioLine += `
-a=ssrc:${ssrc} cname:cname-${ssrc}
-a=ssrc:${ssrc} msid:msid-${ssrc} trackid-${ssrc}
-a=ssrc:${ssrc} mslabel:mslabel-${ssrc}
-a=ssrc:${ssrc} label:label-${ssrc}`
-}
-
-let videoLine = ''
-for (let ssrc = numOfAudio + 1; ssrc <= (numOfAudio + numOfVideo); ssrc++) {
-    videoLine += `
-a=ssrc:${ssrc} cname:cname-${ssrc}
-a=ssrc:${ssrc} msid:msid-${ssrc} trackid-${ssrc}
-a=ssrc:${ssrc} mslabel:mslabel-${ssrc}
-a=ssrc:${ssrc} label:label-${ssrc}`
-}
-
-var offerSdp = `v=0
-o=- 1923518516 2 IN IP4 0.0.0.0
-s=-
-t=0 0
-a=group:BUNDLE audio video
 m=audio 1 RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 0.0.0.0
 a=rtpmap:111 opus/48000/2
@@ -58,13 +41,22 @@ a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
 a=setup:actpass
-a=mid:audio
+a=mid:audio-${ssrc}
 a=sendrecv
 a=ice-ufrag:63c8
 a=ice-pwd:i6tPwzLoPkoiw201qxi4QzQi
 a=fingerprint:sha-256 9E:64:0E:9C:7A:F2:07:04:E6:F2:0F:26:C4:BF:72:1E:AD:66:33:47:D8:71:7D:7C:2B:3D:2E:4B:9F:37:87:7C
-a=candidate:3476808479 1 udp 2122260223 169.254.216.54 56769 typ host generation 0${audioLine}
+a=candidate:3476808479 1 udp 2122260223 169.254.216.54 56769 typ host generation 0
 a=rtcp-mux
+a=ssrc:${ssrc} cname:cname-${ssrc}
+a=ssrc:${ssrc} msid:msid-${ssrc} trackid-${ssrc}
+a=ssrc:${ssrc} mslabel:mslabel-${ssrc}
+a=ssrc:${ssrc} label:label-${ssrc}`
+}
+
+let videoLine = ''
+for (let ssrc = numOfAudio + 1; ssrc <= (numOfAudio + numOfVideo); ssrc++) {
+    videoLine += `
 m=video 1 RTP/SAVPF 96 97 98 99 100 101 114 115 116
 c=IN IP4 0.0.0.0
 a=rtpmap:96 VP8/90000
@@ -108,13 +100,23 @@ a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
 a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
 a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=setup:actpass
-a=mid:video
+a=mid:video-${ssrc}
 a=sendrecv
 a=ice-ufrag:63c8
 a=ice-pwd:i6tPwzLoPkoiw201qxi4QzQi
 a=fingerprint:sha-256 9E:64:0E:9C:7A:F2:07:04:E6:F2:0F:26:C4:BF:72:1E:AD:66:33:47:D8:71:7D:7C:2B:3D:2E:4B:9F:37:87:7C
-a=rtcp-mux${videoLine}
+a=rtcp-mux
 a=x-google-flag:conference
+a=ssrc:${ssrc} cname:cname-${ssrc}
+a=ssrc:${ssrc} msid:msid-${ssrc} trackid-${ssrc}
+a=ssrc:${ssrc} mslabel:mslabel-${ssrc}
+a=ssrc:${ssrc} label:label-${ssrc}`
+}
+
+var offerSdp = `v=0
+o=- 1923518516 2 IN IP4 0.0.0.0
+s=-
+t=0 0${audioLine}${videoLine}
 `;
 
 const offer = new RTCSessionDescription({type: 'offer', sdp: offerSdp});
